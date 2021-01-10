@@ -1,5 +1,5 @@
 import { basename } from 'path'
-import { statSync, existsSync } from 'fs'
+import { statSync, existsSync, readFileSync } from 'fs'
 
 export const CACHE_CHECK_INTERVAL = 20000
 
@@ -11,26 +11,26 @@ interface CachedFileData {
 }
 
 export interface LoadFileDataFunc {
-  (filePath: string): any
+  (filePath: string, fileContent?: string): any
 }
 
 interface FileDataCacheOptions {
   loadFileData: LoadFileDataFunc
   checkInterval?: number
-  verbose?: boolean
+  readFile?: boolean
 }
 
 export class FileDataCache {
   map: Map<string, CachedFileData>
   loadFileData: LoadFileDataFunc
   checkInterval: number
-  verbose?: boolean
+  readFile?: boolean
 
   constructor(options: FileDataCacheOptions) {
     this.map = new Map()
     this.loadFileData = options.loadFileData
     this.checkInterval = options.checkInterval ?? CACHE_CHECK_INTERVAL
-    this.verbose = Boolean(options.verbose)
+    this.readFile = Boolean(options.readFile)
   }
 
   get values() {
@@ -63,7 +63,8 @@ export class FileDataCache {
 
       // Changes detected.
       try {
-        values = this.loadFileData(filePath)
+        const fileContent = this.readFile ? readFile(filePath) : undefined
+        values = this.loadFileData(filePath, fileContent)
       } catch (e) {
         console.warn(`Fail to load file: ${filename}`, e)
       }
@@ -85,6 +86,14 @@ export class FileDataCache {
   retrieveFromCache(fullPath: string) {
     return this.map.get(fullPath)
   }
+}
+
+function readFile(filePath) {
+  let fileContent
+  try {
+    fileContent = readFileSync(filePath, 'utf8')
+  } catch (e) {}
+  return fileContent
 }
 
 function getFileLastModifiedDate(path) {

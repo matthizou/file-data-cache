@@ -1,16 +1,17 @@
 # file-data-cache
+
 Tiny util to cache data from files
 
 ```js
-
-const loadFileData = filePath => {
-    // Do something
-    return []
+const loadFileData = (filePath, fileContent) => {
+    const result = ..... // Do something
+    return result // This value will be cached
 }
 
 const fileCache = new FileDataCache({
   loadFileData,
   checkInterval: 60000,
+  readFile: true
 })
 
 // 1. Initial load of data

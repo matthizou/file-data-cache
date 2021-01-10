@@ -1,17 +1,19 @@
 {
   "name": "file-data-cache",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "main": "dist/FileDataCache.js",
   "types": "dist/FileDataCache.d.ts",
+  "files": ["dist/**/*"],
   "repository": "git@github.com:matthizou/file-data-cache.git",
   "author": "Matt Izoulet <matthieu.izoulet@gmail.com>",
+  "homepage": "https://github.com/matthizou/file-data-cache#readme.md",
   "license": "MIT",
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "prepublish": "yarn compile",
+    "prepublish": "yarn test && yarn compile",
     "test": "jest",
-    "publish": "yarn publish --access public"
+    "publish-package": "yarn publish --access public"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.12.11",

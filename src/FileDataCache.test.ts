@@ -1,21 +1,23 @@
 import { FileDataCache, LoadFileDataFunc } from './FileDataCache'
-import { statSync, existsSync } from 'fs'
+import { statSync, existsSync, readFileSync } from 'fs'
+
+const FILE_PATH = '/somePath/someFile.json'
+const FILE_DATA = ['🐼', '🐻']
+const FILE_DATA_2 = ['🐼', '🐻', '😼']
 
 const NOW = 1610218551523
-jest.mock('fs')
-
 Date.now = jest.fn().mockReturnValue(NOW)
 
+const FILE_CONTENT = 'Panda,bear'
+jest.mock('fs')
 const mockedExistsSync = existsSync as jest.Mock
 mockedExistsSync.mockReturnValue(true)
 const mockedStatSync = statSync as jest.Mock
 mockedStatSync.mockReturnValue({
   mtimeMs: NOW,
 })
-
-const FILE_PATH = '/somePath/someFile.json'
-const FILE_DATA = ['🐼', '🐻']
-const FILE_DATA_2 = ['🐼', '🐻', '😼']
+const mockedReadFileSync = readFileSync as jest.Mock
+mockedReadFileSync.mockReturnValue(FILE_CONTENT)
 
 const loadFileData: jest.MockedFunction<LoadFileDataFunc> = jest
   .fn()
@@ -36,6 +38,30 @@ describe('loadFileDataWithCache', () => {
     result = fileCache.loadData(FILE_PATH)
     expect(loadFileData).toHaveBeenCalledTimes(1)
     expect(result).toBe(FILE_DATA)
+  })
+
+  describe('`readFile` option', () => {
+    it('returns file content to the `loadData` handler', () => {
+      const fileCache = new FileDataCache({
+        loadFileData,
+        readFile: true,
+      })
+
+      fileCache.loadData(FILE_PATH)
+
+      expect(loadFileData).toHaveBeenCalledWith(FILE_PATH, FILE_CONTENT)
+    })
+
+    it("doesn't return file content to the `loadData` handler", () => {
+      const fileCache = new FileDataCache({
+        loadFileData,
+        readFile: false,
+      })
+
+      fileCache.loadData(FILE_PATH)
+
+      expect(loadFileData).toHaveBeenCalledWith(FILE_PATH, undefined)
+    })
   })
 
   describe('when the interval between two checks is smaller than the check interval', () => {
