@@ -3,25 +3,31 @@ import { statSync, existsSync, readFileSync } from 'fs'
 
 export const CACHE_CHECK_INTERVAL = 20000
 
-interface CachedFileData {
+export interface CachedFileData {
   lastModified: number
   fileExists: boolean
-  values: any
+  value: any
   lastChecked: number
+}
+
+export interface LoadDataOptions {
+  bypassCache?: boolean
 }
 
 export interface LoadFileDataFunc {
   (filePath: string, fileContent?: string): any
 }
 
-interface FileDataCacheOptions {
+export interface FileDataCacheOptions {
   loadFileData: LoadFileDataFunc
   checkInterval?: number
   readFile?: boolean
 }
 
+export type FileDataCacheMap = Map<string, CachedFileData>
+
 export class FileDataCache {
-  map: Map<string, CachedFileData>
+  map: FileDataCacheMap
   loadFileData: LoadFileDataFunc
   checkInterval: number
   readFile?: boolean
@@ -33,24 +39,37 @@ export class FileDataCache {
     this.readFile = Boolean(options.readFile)
   }
 
-  get values() {
-    return this.map
+  getValues() {
+    return Array.from(this.map.values())
   }
 
-  loadData(filePath: string) {
-    const now = Date.now()
-    const cachedData: CachedFileData = this.retrieveFromCache(filePath)
+  getPaths() {
+    return Array.from(this.map.keys())
+  }
 
-    if (cachedData) {
+  getValue(fullPath: string) {
+    return this.map.get(fullPath)
+  }
+
+  loadData(filePath: string, options: LoadDataOptions = {}) {
+    let hasChanged = false
+    const now = Date.now()
+    const cachedData: CachedFileData = this.getValue(filePath)
+    const { bypassCache = false } = options
+
+    if (cachedData && !bypassCache) {
       if (now - cachedData.lastChecked < this.checkInterval) {
         // The file was recently checked: return cached values
-        return cachedData.values
+        return {
+          value: cachedData.value,
+          hasChanged: false,
+        }
       }
     }
 
     const fileExists = existsSync(filePath)
     let lastModified = 0
-    let values
+    let value
     const filename = basename(filePath)
 
     if (fileExists) {
@@ -58,34 +77,51 @@ export class FileDataCache {
       lastModified = getFileLastModifiedDate(filePath)
       if (cachedData && lastModified === cachedData.lastModified) {
         // No change
-        return cachedData.values
+        return {
+          value: cachedData.value,
+          hasChanged: false,
+        }
       }
 
       // Changes detected.
       try {
         const fileContent = this.readFile ? readFile(filePath) : undefined
-        values = this.loadFileData(filePath, fileContent)
+        value = this.loadFileData(filePath, fileContent)
+        hasChanged = true
       } catch (e) {
         console.warn(`Fail to load file: ${filename}`, e)
       }
+      if (!cachedData?.fileExists) {
+        hasChanged = true
+      }
     } else {
       console.warn('Path not found: ', filePath)
+      if (cachedData?.fileExists) {
+        hasChanged = true
+      }
     }
 
     const cachedFileData: CachedFileData = {
       lastChecked: now,
       fileExists,
       lastModified,
-      values,
+      value,
     }
 
     this.map.set(filePath, cachedFileData)
-    return values || null
+    return {
+      value: value || null,
+      hasChanged,
+    }
   }
 
-  retrieveFromCache(fullPath: string) {
-    return this.map.get(fullPath)
-  }
+  // reloadAll() {
+  //   let result = []
+  //   this.map.forEach((_, filePath) => {
+  //     result.push({ path: filePath, ...this.loadData(filePath) })
+  //   })
+  //   return result
+  // }
 }
 
 function readFile(filePath) {

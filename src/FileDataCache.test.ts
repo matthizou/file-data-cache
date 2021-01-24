@@ -30,37 +30,41 @@ describe('loadFileDataWithCache', () => {
       checkInterval: 9999,
     })
 
-    let result = fileCache.loadData(FILE_PATH)
+    fileCache.loadData(FILE_PATH)
 
-    expect(fileCache.values.size).toBe(1)
+    expect(fileCache.getValues().length).toBe(1)
     expect(loadFileData).toHaveBeenCalledTimes(1)
 
-    result = fileCache.loadData(FILE_PATH)
+    const { value } = fileCache.loadData(FILE_PATH)
     expect(loadFileData).toHaveBeenCalledTimes(1)
-    expect(result).toBe(FILE_DATA)
+    expect(value).toBe(FILE_DATA)
   })
 
   describe('`readFile` option', () => {
-    it('returns file content to the `loadData` handler', () => {
-      const fileCache = new FileDataCache({
-        loadFileData,
-        readFile: true,
+    describe('when `true`', () => {
+      it('returns file content to the `loadData` handler', () => {
+        const fileCache = new FileDataCache({
+          loadFileData,
+          readFile: true,
+        })
+
+        fileCache.loadData(FILE_PATH)
+
+        expect(loadFileData).toHaveBeenCalledWith(FILE_PATH, FILE_CONTENT)
       })
-
-      fileCache.loadData(FILE_PATH)
-
-      expect(loadFileData).toHaveBeenCalledWith(FILE_PATH, FILE_CONTENT)
     })
 
-    it("doesn't return file content to the `loadData` handler", () => {
-      const fileCache = new FileDataCache({
-        loadFileData,
-        readFile: false,
+    describe('when `false`', () => {
+      it("doesn't return file content to the `loadData` handler", () => {
+        const fileCache = new FileDataCache({
+          loadFileData,
+          readFile: false,
+        })
+
+        fileCache.loadData(FILE_PATH)
+
+        expect(loadFileData).toHaveBeenCalledWith(FILE_PATH, undefined)
       })
-
-      fileCache.loadData(FILE_PATH)
-
-      expect(loadFileData).toHaveBeenCalledWith(FILE_PATH, undefined)
     })
   })
 
@@ -79,7 +83,8 @@ describe('loadFileDataWithCache', () => {
       expect(loadFileData).toHaveBeenCalledTimes(1)
       expect(mockedExistsSync).toHaveBeenCalledTimes(1)
       expect(mockedStatSync).toHaveBeenCalledTimes(1)
-      expect(result).toBe(FILE_DATA)
+      expect(result.value).toBe(FILE_DATA)
+      expect(result.hasChanged).toBe(false)
     })
   })
 
@@ -104,7 +109,8 @@ describe('loadFileDataWithCache', () => {
         result = fileCache.loadData(FILE_PATH)
 
         expect(loadFileData).toHaveBeenCalledTimes(2)
-        expect(result).toBe(FILE_DATA_2)
+        expect(result.value).toBe(FILE_DATA_2)
+        expect(result.hasChanged).toBe(true)
       })
     })
 
@@ -115,11 +121,11 @@ describe('loadFileDataWithCache', () => {
           checkInterval: 0,
         })
 
-        let result = fileCache.loadData(FILE_PATH)
-        result = fileCache.loadData(FILE_PATH)
+        fileCache.loadData(FILE_PATH)
+        const { value } = fileCache.loadData(FILE_PATH)
 
         expect(loadFileData).toHaveBeenCalledTimes(1)
-        expect(result).toBe(FILE_DATA)
+        expect(value).toBe(FILE_DATA)
       })
     })
   })
