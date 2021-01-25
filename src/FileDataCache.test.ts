@@ -2,6 +2,7 @@ import { FileDataCache, LoadFileDataFunc } from './FileDataCache'
 import { statSync, existsSync, readFileSync } from 'fs'
 
 const FILE_PATH = '/somePath/someFile.json'
+const FILE_PATH_2 = '/somePath/someFile2.json'
 const FILE_DATA = ['🐼', '🐻']
 const FILE_DATA_2 = ['🐼', '🐻', '😼']
 
@@ -129,5 +130,42 @@ describe('loadFileDataWithCache', () => {
         expect(fileCache.getEntry(FILE_PATH).lastCheck.wasChanged).toBe(false)
       })
     })
+  })
+
+  it('provides getter functions: `getValues`, `getPaths`, `getEntries`', () => {
+    const fileCache = new FileDataCache({
+      loadFileData,
+    })
+
+    fileCache.loadData(FILE_PATH)
+
+    loadFileData.mockReturnValueOnce(FILE_DATA_2)
+    fileCache.loadData(FILE_PATH_2)
+
+    expect(fileCache.getValues()).toEqual([FILE_DATA, FILE_DATA_2])
+
+    expect(fileCache.getPaths()).toEqual([FILE_PATH, FILE_PATH_2])
+
+    const lastCheck = {
+      time: NOW,
+      wasChanged: true,
+    }
+    expect(fileCache.getEntries()).toEqual([
+      {
+        path: FILE_PATH,
+        value: FILE_DATA,
+        fileExists: true,
+        lastModified: NOW,
+        lastCheck,
+      },
+
+      {
+        path: FILE_PATH_2,
+        value: FILE_DATA_2,
+        fileExists: true,
+        lastModified: NOW,
+        lastCheck,
+      },
+    ])
   })
 })

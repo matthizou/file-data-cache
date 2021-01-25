@@ -1,6 +1,6 @@
 {
   "name": "file-data-cache",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "main": "dist/FileDataCache.js",
   "types": "dist/FileDataCache.d.ts",
   "files": ["dist/**/*"],

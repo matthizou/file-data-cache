@@ -43,11 +43,18 @@ export class FileDataCache {
   }
 
   getEntries() {
-    return Array.from(this.map.entries())
+    return Array.from(this.map.entries()).map(([path, data]) => ({
+      ...data,
+      path,
+    }))
   }
 
   getPaths() {
     return Array.from(this.map.keys())
+  }
+
+  getValues() {
+    return Array.from(this.map.values()).map(({ value }) => value)
   }
 
   getEntry(fullPath: string) {
