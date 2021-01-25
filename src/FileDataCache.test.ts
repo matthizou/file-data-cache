@@ -32,12 +32,13 @@ describe('loadFileDataWithCache', () => {
 
     fileCache.loadData(FILE_PATH)
 
-    expect(fileCache.getValues().length).toBe(1)
+    expect(fileCache.getEntries().length).toBe(1)
     expect(loadFileData).toHaveBeenCalledTimes(1)
+    expect(fileCache.getEntry(FILE_PATH).lastCheck.wasChanged).toBe(true)
 
-    const { value } = fileCache.loadData(FILE_PATH)
+    const result = fileCache.loadData(FILE_PATH)
     expect(loadFileData).toHaveBeenCalledTimes(1)
-    expect(value).toBe(FILE_DATA)
+    expect(result).toBe(FILE_DATA)
   })
 
   describe('`readFile` option', () => {
@@ -83,8 +84,7 @@ describe('loadFileDataWithCache', () => {
       expect(loadFileData).toHaveBeenCalledTimes(1)
       expect(mockedExistsSync).toHaveBeenCalledTimes(1)
       expect(mockedStatSync).toHaveBeenCalledTimes(1)
-      expect(result.value).toBe(FILE_DATA)
-      expect(result.hasChanged).toBe(false)
+      expect(result).toBe(FILE_DATA)
     })
   })
 
@@ -109,8 +109,8 @@ describe('loadFileDataWithCache', () => {
         result = fileCache.loadData(FILE_PATH)
 
         expect(loadFileData).toHaveBeenCalledTimes(2)
-        expect(result.value).toBe(FILE_DATA_2)
-        expect(result.hasChanged).toBe(true)
+        expect(result).toBe(FILE_DATA_2)
+        expect(fileCache.getEntry(FILE_PATH).lastCheck.wasChanged).toBe(true)
       })
     })
 
@@ -122,10 +122,11 @@ describe('loadFileDataWithCache', () => {
         })
 
         fileCache.loadData(FILE_PATH)
-        const { value } = fileCache.loadData(FILE_PATH)
+        const result = fileCache.loadData(FILE_PATH)
 
         expect(loadFileData).toHaveBeenCalledTimes(1)
-        expect(value).toBe(FILE_DATA)
+        expect(result).toBe(FILE_DATA)
+        expect(fileCache.getEntry(FILE_PATH).lastCheck.wasChanged).toBe(false)
       })
     })
   })

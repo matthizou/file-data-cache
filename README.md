@@ -16,15 +16,13 @@ const fileCache = new FileDataCache({
 })
 
 // 1. Initial load of data
-let processedData = fileCache.loadData(SOME_FILE_PATH).value
+let processedData = fileCache.loadData(SOME_FILE_PATH)
 
 // 2. Second call to `loadData`
 // Cached values will be returned if:
 // A/ the ellapsed time between this call and the last time the file was loading is smaller than `checkInterval`
 // B/ the last modified date of the file hasn't changed
 
-processedData = fileCache.loadData(SOME_FILE_PATH).value
-
-
+processedData = fileCache.loadData(SOME_FILE_PATH)
 
 ```
